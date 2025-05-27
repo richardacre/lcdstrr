@@ -1,0 +1,16 @@
+[Unit]
+Description = LCDstrr
+After = network.target
+ 
+[Service]
+Type = simple
+ExecStart = python3 /home/USERNAME/arduino_lcd/main.py
+User = USERNAME
+Group = USERNAME
+Restart = always
+SyslogIdentifier = lcdstrr
+RestartSec = 5
+TimeoutStartSec = infinity
+ 
+[Install]
+WantedBy = multi-user.target
