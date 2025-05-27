@@ -1,4 +1,4 @@
-import psutil;      # python-psutil
+import psutil;      # python3-psutil
 import serial;      # python3-serial
 import time;
 
@@ -92,7 +92,6 @@ while arduino.is_open:
     f_ram = o_ram.percent;
     s_ram = str(int(f_ram+0.5));
 
-    #line2 = "RAM " + pct(o_ram.percent) + "  " + fmt(o_ram.total - o_ram.available) + "/" + fmt(o_ram.total) + "\0";
     line2 = "RAM " + pct(o_ram.percent) + "  " + fmt(o_ram.total - o_ram.available) + " " + fmt(o_ram.available) + "\0";
 
   
@@ -103,7 +102,6 @@ while arduino.is_open:
     f_dsk = o_dsk.percent;     # used space
     s_dsk = str(int(f_dsk+0.5));
 
-    #line3 = "HDD " + pct(o_dsk.percent) + "  " + fmt(o_dsk.used) + "/" + fmt(o_dsk.total) + "\0";
     line3 = "HDD " + pct(o_dsk.percent) + "  " + fmt(o_dsk.used) + " " + fmt(o_dsk.total - o_dsk.used) + "\0";
  
 
