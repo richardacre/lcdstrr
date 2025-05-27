@@ -14,4 +14,6 @@ Dependencies:
 
 No warranty or support given or implied, this is a personal project that I am sharing for the curious.
 
+Only tested and used on Debian 12
+
 ![image](https://github.com/user-attachments/assets/e4a6651e-e8da-41ef-b5f8-982ff70353dc)
