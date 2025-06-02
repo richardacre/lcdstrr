@@ -1,4 +1,4 @@
-import psutil;      # python3-psutil
+import psutil;      # python-psutil
 import serial;      # python3-serial
 import time;
 
@@ -8,35 +8,47 @@ i_net_snd_old = 0;
 i_net_rec_old = 0;
 
 # format a number of bytes into 4 chars, inc KMGT suffix
-# todo: divide by multiples of 1024 instead of 1000
 def fmt(v):
     sfx = "B";
     f = float(v);
 
+    t = 1024 * 1024 * 1024 * 1024;
+    g = 1024 * 1024 * 1024;
+    m = 1024 * 1024;
+    k = 1024;
+
     # first determine magnitude and suffix
-    # and bring into the range 0-999
-    if v > 999999999999:
+    if v >= t:
         sfx = "T";
-        f = f / 1000000000000;
-    elif v > 999999999:
+        f = f / t;
+    elif v >= g:
         sfx = "G";
-        f = f / 1000000000;
-    elif v > 999999:
+        f = f / g;
+    elif v >= m:
         sfx = "M";
-        f = f / 1000000;
+        f = f / m;
     else:
         sfx = "K";
-        f = f / 1000;
+        f = f / k;
+        
+    # now solve for when still four-digits e.g. 1023 GB 
+    if f > 999:
+        f = f / 1024;
+        if sfx == "G":
+            sfx = "T";
+        elif sfx == "M":
+            sfx = "G";
+        elif sfx == "K":
+            sfx = "M";
 
     # if below 10 then show 1dp
-    if f < 10:
-        str = f"{f:0.1f}";
-    else:
+    if f > 9:
         str = f"{f:0.0f}";
+    else:
+        str = f"{f:0.1f}";
 
     return f"{str:>3}" + sfx;
 
-# converts a percentage to a bar chart
 def pct(v):
     if v > 90:
         return "#####";
@@ -70,7 +82,7 @@ o_net = psutil.net_io_counters();
 i_net_snd_old = o_net.bytes_sent * 1.6;     # convert bytes to bits, then per-second
 i_net_rec_old = o_net.bytes_recv * 1.6;
 
-arduino = serial.Serial(port='/dev/ttyACM0', baudrate=9600, dsrdtr=False, timeout=None);
+arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, dsrdtr=False, timeout=None);
 while arduino.is_open:
     time.sleep(5);      # sleep at the start because I'm paranoid about the first bootup/reset taking a moment
 
@@ -127,17 +139,22 @@ while arduino.is_open:
     i_net_max = i_net_snd_since;
     if i_net_rec_since > i_net_max:
         i_net_max = i_net_rec_since;
+        
+    #bits -> bytes
+    i_net_max = i_net_max/8;
+    i_net_snd_since = i_net_snd_since/8;
+    i_net_rec_since = i_net_rec_since/8;
     
     s_net_pct = "     ";    
-    if i_net_max > 100000000:    # 100Mb
+    if i_net_max > 100000000:    # 100MB
         s_net_pct = "#####";
-    elif i_net_max > 10000000:  # 10Mb
+    elif i_net_max > 10000000:  # 10MB
         s_net_pct = "#### ";
-    elif i_net_max > 1000000:   # 1Mb
+    elif i_net_max > 1000000:   # 1MB
         s_net_pct = "###  ";
-    elif i_net_max > 100000:    # 100kb
+    elif i_net_max > 100000:    # 100kB
         s_net_pct = "##   ";
-    elif i_net_max > 10000:    # 10kb
+    elif i_net_max > 10000:    # 10kB
         s_net_pct = "#    ";
 
     line4 = "NET " + s_net_pct + "  " + fmt(i_net_snd_since) + " " + fmt(i_net_rec_since) + "\0";
