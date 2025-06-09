@@ -8,6 +8,7 @@ i_net_snd_old = 0;
 i_net_rec_old = 0;
 
 # format a number of bytes into 4 chars, inc KMGT suffix
+# 4006490112
 def fmt(v):
     sfx = "B";
     f = float(v);
@@ -67,7 +68,8 @@ def bittify(s):
     b = bytearray();
     b.extend(s.encode('ascii'));
     i = 0;
-    while(b[i] != 0):
+    l = len(b);
+    while(i < l):
         if b[i] == 35:      # # (hash) replace with solid block
             b[i] = 255;
         if b[i] == 39:      # ' replace with degree symbol
@@ -82,7 +84,7 @@ o_net = psutil.net_io_counters();
 i_net_snd_old = o_net.bytes_sent * 1.6;     # convert bytes to bits, then per-second
 i_net_rec_old = o_net.bytes_recv * 1.6;
 
-arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, dsrdtr=False, timeout=None);
+arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=None);
 while arduino.is_open:
     time.sleep(5);      # sleep at the start because I'm paranoid about the first bootup/reset taking a moment
 
@@ -94,7 +96,7 @@ while arduino.is_open:
     f_tmp = psutil.sensors_temperatures()['coretemp'][0].current;
     s_tmp = str(int(f_tmp+0.5));
 
-    line1 = "CPU " + pct(f_cpu) + f"  {s_cpu:>3}% {s_tmp:>3}'\0";
+    line1 = "CPU " + pct(f_cpu) + f"  {s_cpu:>3}% {s_tmp:>3}'";
 
     
     # RAM
@@ -104,7 +106,7 @@ while arduino.is_open:
     f_ram = o_ram.percent;
     s_ram = str(int(f_ram+0.5));
 
-    line2 = "RAM " + pct(o_ram.percent) + "  " + fmt(o_ram.total - o_ram.available) + " " + fmt(o_ram.available) + "\0";
+    line2 = "RAM " + pct(o_ram.percent) + "  " + fmt(o_ram.total - o_ram.available) + " " + fmt(o_ram.available);
 
   
 
@@ -114,7 +116,7 @@ while arduino.is_open:
     f_dsk = o_dsk.percent;     # used space
     s_dsk = str(int(f_dsk+0.5));
 
-    line3 = "HDD " + pct(o_dsk.percent) + "  " + fmt(o_dsk.used) + " " + fmt(o_dsk.total - o_dsk.used) + "\0";
+    line3 = "HDD " + pct(o_dsk.percent) + "  " + fmt(o_dsk.used) + " " + fmt(o_dsk.total - o_dsk.used);
  
 
 
@@ -157,7 +159,7 @@ while arduino.is_open:
     elif i_net_max > 10000:    # 10kB
         s_net_pct = "#    ";
 
-    line4 = "NET " + s_net_pct + "  " + fmt(i_net_snd_since) + " " + fmt(i_net_rec_since) + "\0";
+    line4 = "NET " + s_net_pct + "  " + fmt(i_net_snd_since) + " " + fmt(i_net_rec_since);
 
 
 
@@ -167,16 +169,13 @@ while arduino.is_open:
     #print(line3);
     #print(line4);
 
-    arduino.write("!1\0".encode('ascii')); 
-    arduino.write(bittify(line1));
-
-    arduino.write("!2\0".encode('ascii'));
-    arduino.write(bittify(line2));
-
-    arduino.write("!3\0".encode('ascii'));
-    arduino.write(bittify(line3));
-    
-    arduino.write("!4\0".encode('ascii'));
-    arduino.write(bittify(line4));
+    # 2 = STX (Start of text)
+    # 3 = ETX (End of text)
+    arduino.write([2])
+    arduino.write(bittify(line1))
+    arduino.write(bittify(line3))   # the lcd hardware wraps lines in the order 1324 for some reason
+    arduino.write(bittify(line2))
+    arduino.write(bittify(line4))
+    arduino.write([3]);
 
 arduino.close();

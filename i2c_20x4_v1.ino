@@ -6,46 +6,59 @@
 
 hd44780_I2Cexp lcd;
 String s;
-byte b[20];
+byte b[80];
 int i;
+int j;
+byte v;
+int ready;
 
-void setup() {
-  Serial.begin(9600);
-  
+void setup() 
+{
+  Serial.begin(9600);  
   lcd.begin(20,4);
   lcd.print(".");
 }
 
-void loop() {
-  // wait for comms to be established
-  while(!Serial.available());
+void loop() 
+{
+  // Serial has a buffer of 64 bytes, but our display
+  // uses 80. So the python code sends a 2 (STX)
+  // followed by the bytes to print on the LCD, and
+  // capped-off with a 3 (ETX) which is our cue to
+  // actually send the (complete) data to the LCD.
+  if (Serial.available())
+	{
+		while (Serial.available())
+		{
+			v = Serial.read();
+      if(v == 2) 
+      {
+        // Start of Text
+        i = 0;
+      }
+      else if(v == 3) 
+      {
+        // end of Text
+        ready = 1;
+      }
+      else if(i < 80)
+      {
+        // body
+        b[i] = v;
+        i++;
+      }
+		}
+  }
 
-  while(true) 
+  if(ready == 1) 
   {
-    s = Serial.readStringUntil('\0');
-
-    // I can likely make this much simpler by just having the python code send
-    // 80 bytes each time (to fill the 20x4 screen). But my first attempts ran into wrapping
-    // and truncation issues. That was before I switched to the hd44780 library, though.
-    if(s == "!1")
+    j = 0;
+    lcd.clear();
+    while(j < i) 
     {
-      lcd.setCursor(0,0);
+      lcd.write(b[j]);
+      j++;
     }
-    else if(s == "!2") 
-    {
-      lcd.setCursor(0,1);
-    }
-    else if(s == "!3") 
-    {
-      lcd.setCursor(0,2);
-    }
-    else if(s == "!4") 
-    {
-      lcd.setCursor(0,3);      
-    }
-    else 
-    {
-      lcd.print(s);
-    }
+    ready = 0;   
   }
 }
