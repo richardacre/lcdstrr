@@ -26,30 +26,27 @@ void loop()
   // followed by the bytes to print on the LCD, and
   // capped-off with a 3 (ETX) which is our cue to
   // actually send the (complete) data to the LCD.
-  if (Serial.available())
+  while (Serial.available())
 	{
-		while (Serial.available())
-		{
-			v = Serial.read();
-      if(v == 2) 
-      {
-        // Start of Text
-        i = 0;
-      }
-      else if(v == 3) 
-      {
-        // end of Text
-        ready = 1;
-      }
-      else if(i < 80)
-      {
-        // body
-        b[i] = v;
-        i++;
-      }
-		}
-  }
-
+		v = Serial.read();
+    if(v == 2) 
+    {
+      // Start of Text
+      i = 0;
+    }
+    else if(v == 3) 
+    {
+      // end of Text
+      ready = 1;
+    }
+    else if(i < 80)
+    {
+      // body
+      b[i] = v;
+      i++;
+    }
+	}
+ 
   if(ready == 1) 
   {
     j = 0;
@@ -58,7 +55,7 @@ void loop()
     {
       lcd.write(b[j]);
       j++;
-    }
+    } 
     ready = 0;   
   }
 }
