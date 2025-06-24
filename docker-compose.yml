@@ -1,0 +1,11 @@
+services:
+  arduinolcd:
+    image: arduinolcd
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
+    group_add:
+      - 20  # dialout, you may need to add user to the group and/or chmod the dev/ttyXXXX entry
+networks: {}

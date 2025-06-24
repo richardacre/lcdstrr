@@ -1,4 +1,4 @@
-import psutil;      # python-psutil
+import psutil;      # python3-psutil
 import serial;      # python3-serial
 import time;
 
@@ -84,7 +84,8 @@ o_net = psutil.net_io_counters();
 i_net_snd_old = o_net.bytes_sent * 1.6;     # convert bytes to bits, then per-second
 i_net_rec_old = o_net.bytes_recv * 1.6;
 
-arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=None);
+# you may need to change this to /dev/ttyUSB0 or something else
+arduino = serial.Serial(port='/dev/ttyACM0', baudrate=9600, timeout=None);
 while arduino.is_open:
     time.sleep(5);      # sleep at the start because I'm paranoid about the first bootup/reset taking a moment
 
